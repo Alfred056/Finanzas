@@ -1,26 +1,201 @@
 @import "tailwindcss";
 
+/* Sistema de diseño: Raycast (DESIGN.md) adaptado a app financiera */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --color-void-black: #040506;
+  --color-ink: #07080a;
+  --color-obsidian: #111214;
+  --color-graphite: #1b1c1e;
+  --color-smoke: #6a6b6c;
+  --color-ash: #9c9c9d;
+  --color-mist: #e6e6e6;
+  --color-iron: #454647;
+  --color-slate: #2f3031;
+  --color-pure-white: #ffffff;
+  --color-coral-pulse: #ff6363;
+  --color-ember-hush: #452324;
+  --color-success-green: #59d499;
+  --color-border: #363739;
+  --color-hairline: #1b1c1e;
+
+  --font-inter: var(--font-inter-next), "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-geistmono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --radius-buttons: 8px;
+  --radius-inputs: 8px;
+  --radius-cards: 16px;
+  --radius-largecards: 20px;
+  --radius-badges: 6px;
+
+  /* "Keyboard key": highlight superior + anillo + sombra interior inferior */
+  --shadow-key: rgba(255, 255, 255, 0.05) 0 1px 0 0 inset, rgba(255, 255, 255, 0.12) 0 0 0 1px, rgba(0, 0, 0, 0.2) 0 -1px 0 0 inset;
+  --shadow-well: rgba(0, 0, 0, 0.5) 0 1px 2px 0 inset, rgba(255, 255, 255, 0.04) 0 0 0 1px;
+  --shadow-btn: rgba(0, 0, 0, 0.03) 0 7px 3px 0, rgba(0, 0, 0, 0.25) 0 4px 4px 0;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@theme {
+  --color-void-black: #040506;
+  --color-ink: #07080a;
+  --color-obsidian: #111214;
+  --color-graphite: #1b1c1e;
+  --color-smoke: #6a6b6c;
+  --color-ash: #9c9c9d;
+  --color-mist: #e6e6e6;
+  --color-iron: #454647;
+  --color-slate: #2f3031;
+  --color-coral-pulse: #ff6363;
+  --color-ember-hush: #452324;
+  --color-success-green: #59d499;
+
+  --font-sans: var(--font-inter-next), "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Neutros remapeados a la escala Raycast (todas las clases zinc-* del proyecto) */
+  --color-zinc-100: #ffffff;
+  --color-zinc-200: #e6e6e6;
+  --color-zinc-300: #c7c7c8;
+  --color-zinc-400: #9c9c9d;
+  --color-zinc-500: #6a6b6c;
+  --color-zinc-600: #454647;
+  --color-zinc-700: #363739;
+  --color-zinc-800: #1b1c1e;
+  --color-zinc-900: #07080a;
+  --color-zinc-950: #040506;
+
+  /* Semántica financiera: verde = positivo/ahorro, rojo suave = negativo, el resto neutro */
+  --color-emerald-400: #59d499;
+  --color-emerald-500: #59d499;
+  --color-emerald-600: #3fae7b;
+  --color-emerald-950: #0b1d15;
+  --color-red-400: #ff8585;
+  --color-red-500: #ff8585;
+  --color-red-600: #c75a5a;
+  --color-red-950: #1f0f10;
+  --color-rose-400: #ff8585;
+  --color-rose-500: #ff8585;
+  --color-amber-400: #e6e6e6;
+  --color-amber-500: #9c9c9d;
+  --color-sky-500: #c7c7c8;
+  --color-violet-500: #9c9c9d;
+
+  --radius-lg: 8px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Sin desborde horizontal; `clip` no rompe los elementos sticky */
+html, body { max-width: 100%; overflow-x: clip; }
+
+@layer base {
+  input, select, textarea { min-width: 0; max-width: 100%; }
+}
+
+/* Móvil: con menos de 16px, iOS hace zoom al enfocar y deja la vista desplazada */
+@media (max-width: 639px) {
+  input, select, textarea { font-size: 16px; }
+  input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 42px; }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-void-black);
+  background-image:
+    radial-gradient(ellipse 70% 38% at 18% -6%, rgba(99, 161, 255, 0.10), transparent 70%),
+    radial-gradient(ellipse 60% 34% at 85% -8%, rgba(255, 99, 99, 0.09), transparent 70%);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+
+  color: var(--color-mist);
+  font-family: var(--font-inter);
+  font-feature-settings: "calt", "kern", "liga", "ss03";
+  -webkit-font-smoothing: antialiased;
+}
+
+::placeholder { color: var(--color-ash); opacity: 0.7; }
+::selection { background: rgba(255, 99, 99, 0.35); }
+
+@layer components {
+/* Tarjetas / paneles con efecto key */
+.key-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 40%), var(--color-ink);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: var(--radius-cards);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.45);
+  padding: 24px;
+  transition: border-color 0.15s;
+}
+.key-card:hover, .key-card:focus-within { border-color: #3b3d42; }
+.key-card-sm { padding: 16px; }
+.edge-card {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-cards);
+  box-shadow: rgba(255, 255, 255, 0.05) 0 1px 0 0 inset;
+}
+.key-card-surplus { border-color: rgba(89, 212, 153, 0.4); background: linear-gradient(180deg, rgba(89, 212, 153, 0.07), transparent 60%), var(--color-ink); }
+.key-card-deficit { border-color: rgba(255, 99, 99, 0.45); background: linear-gradient(180deg, rgba(255, 99, 99, 0.1), transparent 60%), #0d0708; }
+/* KPI: barra superior de estado (color vía --kpi) */
+.kpi { position: relative; overflow: hidden; }
+.kpi::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 2px; background: var(--kpi, #363739); opacity: 0.9; }
+.kpi-value { font-size: clamp(20px, 5.6vw, 26px); overflow-wrap: anywhere;line-height: 1.1; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+
+/* Inputs hundidos */
+.input-well {
+  width: 100%;
+  background: var(--color-obsidian);
+  color: #fff;
+  border: 1px solid #26272b;
+  border-radius: var(--radius-inputs);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 1px 3px rgba(0, 0, 0, 0.4);
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.input-well:hover { border-color: #3b3d42; }
+.input-well:focus { border-color: #ff6363; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 0 0 3px rgba(255, 99, 99, 0.22); }
+.input-well.is-error { border-color: #ff6363; }
+
+/* Botón primario neutro (Mist + Iron) y variantes */
+.btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--color-mist); color: var(--color-iron);
+  border-radius: var(--radius-buttons); padding: 8px 12px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: var(--shadow-btn);
+  transition: background 0.15s, opacity 0.15s;
+}
+.btn-primary:hover { background: #fff; }
+.btn-primary:disabled { opacity: 0.5; }
+.btn-ghost {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--color-ash); border-radius: var(--radius-buttons);
+  box-shadow: rgba(255, 255, 255, 0.05) 0 1px 0 0 inset, var(--color-border) 0 0 0 1px;
+  padding: 6px 10px; font-size: 13px; font-weight: 500;
+  transition: color 0.15s, background 0.15s;
+}
+.btn-ghost:hover { color: #fff; background: var(--color-graphite); }
+
+/* Navegación glass */
+.glass {
+  background: rgba(7, 8, 10, 0.6);
+  backdrop-filter: blur(48px);
+  -webkit-backdrop-filter: blur(48px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-buttons);
+}
+
+/* Bloque fijo superior: fondo casi opaco sobre Void Black */
+.app-sticky { background: rgba(4, 5, 6, 0.92); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+
+/* Año: sin flechas nativas, para que quepa en un ancho compacto */
+.year-input { appearance: textfield; -moz-appearance: textfield; }
+.year-input::-webkit-inner-spin-button, .year-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+.tx-badge { background: var(--color-graphite); border: 1px solid rgba(255, 255, 255, 0.08); color: #e6e6e6; border-radius: 6px; padding: 1px 8px; font-size: 12px; font-weight: 500; }
+.eyebrow {
+  font-family: var(--font-geistmono);
+  font-size: 11px; letter-spacing: 0.073em; text-transform: uppercase; color: var(--color-smoke);
+}
+.badge { background: var(--color-graphite); color: #fff; border-radius: var(--radius-badges); padding: 0 6px; font-size: 12px; }
 }
