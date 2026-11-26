@@ -2,6 +2,7 @@
 import { CreditCard, HandCoins, Landmark, TrendingDown, TrendingUp } from "lucide-react";
 import { money, shortDate, useApi, type Summary } from "@/lib/api";
 import { Bar, Empty, Panel } from "./ui";
+import { CategorySpending } from "./CategorySpending";
 import type { ViewProps } from "./AppShell";
 
 function Kpi({ label, value, icon, tone = "text-white", accent }: { label: string; value: string; icon: React.ReactNode; tone?: string; accent: string }) {
@@ -54,6 +55,8 @@ export function Dashboard({ month, year, version }: ViewProps) {
           Compromisos = tarjetas {money(s.cardsDue)} + préstamos {money(s.loansDue)} + fijos {money(s.fixedDue)} + ahorro {money(s.savingsBudget)} + gustos {money(s.wantsBudget)}.
         </p>
       </Panel>
+
+      <CategorySpending summary={s} version={version} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Panel title="Tarjetas de crédito" icon={<CreditCard size={15} />}>

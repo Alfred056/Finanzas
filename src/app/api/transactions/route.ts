@@ -1,6 +1,7 @@
 import { requireUserId } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { HttpError, readBody, respond } from "@/lib/http";
+import { withCategoryColor } from "@/services/categoryService";
 import { createTransaction, parseTransaction } from "@/services/transactionService";
 
 export const GET = (req: Request) =>
@@ -17,7 +18,7 @@ export const GET = (req: Request) =>
         : month === null
           ? { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) }
           : { gte: new Date(Date.UTC(year, month - 1, 1)), lt: new Date(Date.UTC(year, month, 1)) };
-    return prisma.transaction.findMany({
+    const transactions = await prisma.transaction.findMany({
       where: {
         userId,
         date: range,
@@ -27,6 +28,7 @@ export const GET = (req: Request) =>
       orderBy: { date: "desc" },
       take: Math.min(Number(q.get("limit") ?? 200) || 200, 1000),
     });
+    return withCategoryColor(userId, transactions);
   });
 
 export const POST = (req: Request) =>

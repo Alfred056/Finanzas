@@ -5,6 +5,7 @@ import {
   calculateLoanAmortization,
   classifyCharge,
   computeCashflowSummary,
+  groupByCategory,
   getCardBillingCycle,
 } from "../src/services/financeEngine";
 
@@ -92,7 +93,7 @@ test("préstamo: pagos restantes = saldo + intereses restantes; cierre en 0", ()
 test("dinero libre = bancos − tarjetas − cuotas − fijos − ahorro − gustos", () => {
   const card = { id: "c1", bankName: "X", cardName: "Y", creditLimit: D(3000), cutoffDay: 15, paymentDueDay: 10 };
   const tx = (type: string, amount: number, date: string, extra = {}) => ({
-    type, amount: D(amount), date: utc(date), isHistorical: false, creditCardId: null, fixedExpenseId: null, ...extra,
+    type, amount: D(amount), category: "Comida", date: utc(date), isHistorical: false, creditCardId: null, fixedExpenseId: null, ...extra,
   });
   const s = computeCashflowSummary({
     month: 12, year: 2026, today: utc("2026-11-24"),
@@ -132,4 +133,17 @@ test("dinero libre negativo → DEFICIT", () => {
   });
   assert.equal(s.freeMoney, "-300.00");
   assert.equal(s.projection.status, "DEFICIT");
+});
+
+test("gasto por categoría: agrupa, ordena y calcula porcentajes sin error de punto flotante", () => {
+  const r = groupByCategory([
+    { category: "Ocio", amount: D("0.1") },
+    { category: "Comida", amount: D("0.7") },
+    { category: "Ocio", amount: D("0.2") },
+  ]);
+  assert.deepEqual(r, [
+    { category: "Comida", total: "0.70", percentage: "70.0" },
+    { category: "Ocio", total: "0.30", percentage: "30.0" },
+  ]);
+  assert.deepEqual(groupByCategory([]), []);
 });

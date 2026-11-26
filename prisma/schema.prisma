@@ -130,6 +130,7 @@ model Category {
   id   String       @id @default(cuid())
   name String
   type CategoryType @default(BOTH)
+  color String? // #rrggbb
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([userId, name])

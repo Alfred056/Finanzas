@@ -134,7 +134,19 @@ export function calculateLoanAmortization(
   };
 }
 
-/* ───────────── 3. Resumen de flujo de caja mensual ───────────── */
+/* ───────────── 3. Gasto por categoría ───────────── */
+
+/** Agrupa gastos por categoría, de mayor a menor, con su porcentaje (1 decimal) sobre el total. */
+export function groupByCategory(expenses: { category: string; amount: Prisma.Decimal }[]) {
+  const totals = new Map<string, Prisma.Decimal>();
+  for (const t of expenses) totals.set(t.category, (totals.get(t.category) ?? ZERO).plus(t.amount));
+  const total = sum([...totals.values()]);
+  return [...totals]
+    .sort(([a, x], [b, y]) => y.comparedTo(x) || a.localeCompare(b))
+    .map(([category, amount]) => ({ category, total: fmt(amount), percentage: amount.div(total).mul(100).toFixed(1) }));
+}
+
+/* ───────────── 4. Resumen de flujo de caja mensual ───────────── */
 
 export interface CashflowInput {
   month: number; // 1-12
@@ -148,7 +160,7 @@ export interface CashflowInput {
   }[];
   plans: { name: string; type: string; monthlyTarget: Prisma.Decimal }[];
   fixedExpenses: { id: string; amount: Prisma.Decimal; active: boolean }[];
-  transactions: { type: string; amount: Prisma.Decimal; date: Date; isHistorical: boolean; creditCardId: string | null; fixedExpenseId: string | null }[];
+  transactions: { type: string; amount: Prisma.Decimal; category: string; date: Date; isHistorical: boolean; creditCardId: string | null; fixedExpenseId: string | null }[];
 }
 
 export function computeCashflowSummary(inp: CashflowInput) {
@@ -213,7 +225,8 @@ export function computeCashflowSummary(inp: CashflowInput) {
   // Movimientos del mes (incluye históricos, solo estadística)
   const monthTx = inp.transactions.filter((t) => inMonth(t.date));
   const income = sum(monthTx.filter((t) => t.type === "INCOME").map((t) => t.amount));
-  const expenses = sum(monthTx.filter((t) => t.type === "EXPENSE").map((t) => t.amount));
+  const monthExpenses = monthTx.filter((t) => t.type === "EXPENSE");
+  const expenses = sum(monthExpenses.map((t) => t.amount));
 
   const free = bankTotal.minus(cardsDue).minus(loansDue).minus(savings).minus(wants).minus(fixedDue);
 
@@ -228,6 +241,7 @@ export function computeCashflowSummary(inp: CashflowInput) {
     wantsBudget: fmt(wants),
     income: fmt(income),
     expenses: fmt(expenses),
+    expensesByCategory: groupByCategory(monthExpenses),
     commitments: fmt(cardsDue.plus(loansDue).plus(fixedDue).plus(savings).plus(wants)),
     /** Dinero Realmente Libre = liquidez − tarjetas del mes − cuotas − gastos fijos − ahorro − gustos. */
     freeMoney: fmt(free),
@@ -248,7 +262,7 @@ export async function getMonthlyCashflowSummary(month: number, year: number, use
     prisma.fixedExpense.findMany({ where: { userId, active: true } }),
     prisma.transaction.findMany({
       where: { userId },
-      select: { type: true, amount: true, date: true, isHistorical: true, creditCardId: true, fixedExpenseId: true },
+      select: { type: true, amount: true, category: true, date: true, isHistorical: true, creditCardId: true, fixedExpenseId: true },
     }),
   ]);
   return computeCashflowSummary({ month, year, today: new Date(), accounts, cards, loans, plans, fixedExpenses, transactions });

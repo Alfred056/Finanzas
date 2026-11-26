@@ -1,11 +1,13 @@
 "use client";
 import { useState } from "react";
-import { Plus, Upload } from "lucide-react";
-import { api, money, post, shortDate, useApi, type Account, type Card, type Category, type Tx } from "@/lib/api";
+import { Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { api, post, shortDate, useApi, type Account, type Card, type Category, type Tx } from "@/lib/api";
 import { Empty, Panel, QuickForm } from "./ui";
+import { DeleteTxDialog, EditTxDialog } from "./TransactionDialogs";
+import { signedAmount, TYPE_LABEL } from "./txFormat";
+import { CategoryBadge } from "./CategoryColor";
 import type { ViewProps } from "./AppShell";
 
-const TYPE_LABEL: Record<Tx["type"], string> = { INCOME: "Ingreso", EXPENSE: "Gasto", CARD_PAYMENT: "Pago tarjeta", LOAN_PAYMENT: "Pago préstamo" };
 const SAMPLE = "type,amount,date,category,description,bankAccountId,creditCardId\nEXPENSE,45.50,2026-01-15,Comida,Almuerzo,,";
 
 function ImportBox({ onDone }: { onDone: () => void }) {
@@ -95,6 +97,8 @@ export function Transactions({ month, year, version, refresh, today }: ViewProps
   const cards = useApi<Card[]>("/api/cards", version).data ?? [];
   const fetched = useApi<Category[]>("/api/categories", version).data ?? [];
   const [added, setAdded] = useState<Category[]>([]);
+  const [editing, setEditing] = useState<Tx | null>(null);
+  const [deleting, setDeleting] = useState<Tx | null>(null);
   const categories = [...fetched, ...added.filter((a) => !fetched.some((c) => c.id === a.id))];
 
   function onCategoryCreated(c: Category) {
@@ -136,10 +140,10 @@ export function Transactions({ month, year, version, refresh, today }: ViewProps
         {txs?.length === 0 && <Empty>Sin movimientos en este mes.</Empty>}
         <div className="divide-y divide-zinc-800">
           {txs?.map((t) => (
-            <div key={t.id} className="flex items-center justify-between gap-3 rounded-lg px-2 py-2.5 text-sm transition-colors hover:bg-obsidian">
-              <span className="min-w-0">
+            <div key={t.id} className="flex items-center justify-between gap-2 rounded-lg px-2 py-2.5 text-sm transition-colors hover:bg-obsidian">
+              <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-center gap-2">
-                  <span className="tx-badge">{t.category}</span>
+                  <CategoryBadge name={t.category} color={t.color} />
                   {t.description && <span className="min-w-0 max-w-full truncate text-zinc-200">{t.description}</span>}
                 </span>
                 <span className="mt-1 block font-mono text-[11px] uppercase tracking-wider text-zinc-500">
@@ -147,7 +151,15 @@ export function Transactions({ month, year, version, refresh, today }: ViewProps
                 </span>
               </span>
               <span className={`shrink-0 text-[15px] font-semibold tabular-nums ${t.type === "INCOME" ? "text-success-green" : "text-coral-pulse"}`}>
-                {t.type === "INCOME" ? "+" : "−"}{money(t.amount)}
+                {signedAmount(t)}
+              </span>
+              <span className="flex shrink-0 gap-1.5">
+                <button type="button" aria-label="Editar movimiento" title="Editar" onClick={() => setEditing(t)} className="btn-ghost !p-1.5">
+                  <Pencil size={14} />
+                </button>
+                <button type="button" aria-label="Eliminar movimiento" title="Eliminar" onClick={() => setDeleting(t)} className="btn-ghost !p-1.5">
+                  <Trash2 size={14} />
+                </button>
               </span>
             </div>
           ))}
@@ -155,6 +167,10 @@ export function Transactions({ month, year, version, refresh, today }: ViewProps
         </div>
       </Panel>
 
+      {editing && (
+        <EditTxDialog tx={editing} accounts={accounts} cards={cards} categories={categories} onClose={() => setEditing(null)} onDone={refresh} />
+      )}
+      {deleting && <DeleteTxDialog tx={deleting} onClose={() => setDeleting(null)} onDone={refresh} />}
     </div>
   );
 }

@@ -1,27 +1,20 @@
+import { defaultColorFor, isHexColor } from "@/domain/categoryColors";
 import { requireUserId } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { oneOf, readBody, respond, str, HttpError } from "@/lib/http";
+import { listCategories } from "@/services/categoryService";
 
 const TYPES = ["EXPENSE", "INCOME", "BOTH"] as const;
-const BASE = [
-  ["Comida", "EXPENSE"], ["Transporte", "EXPENSE"], ["Servicios", "EXPENSE"],
-  ["Ocio", "EXPENSE"], ["Salud", "EXPENSE"], ["Sueldo", "INCOME"],
-] as const;
 
-export const GET = () =>
-  respond(async () => {
-    const userId = await requireUserId();
-    if ((await prisma.category.count({ where: { userId } })) === 0)
-      for (const [name, type] of BASE)
-        await prisma.category.upsert({ where: { userId_name: { userId, name } }, update: {}, create: { userId, name, type } });
-    return prisma.category.findMany({ where: { userId }, orderBy: { name: "asc" } });
-  });
+export const GET = () => respond(async () => listCategories(await requireUserId()));
 
 export const POST = (req: Request) =>
   respond(async () => {
     const userId = await requireUserId();
     const b = await readBody(req);
     const name = str(b, "name");
+    const color = (str(b, "color", true) || defaultColorFor(name)).toLowerCase();
+    if (!isHexColor(color)) throw new HttpError(400, "Campo 'color' debe tener formato #rrggbb");
     if (await prisma.category.findUnique({ where: { userId_name: { userId, name } } })) throw new HttpError(409, "La categoría ya existe");
-    return prisma.category.create({ data: { userId, name, type: oneOf(b, "type", TYPES, "BOTH") } });
+    return prisma.category.create({ data: { userId, name, color, type: oneOf(b, "type", TYPES, "BOTH") } });
   }, 201);

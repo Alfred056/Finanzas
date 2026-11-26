@@ -38,7 +38,7 @@ export interface Loan {
   id: string; lenderName: string; principalAmount: string; annualInterestRate: string;
   totalInstallments: number; paidInstallments: number; monthlyPayment: string; paymentDay: number;
 }
-export interface Category { id: string; name: string; type: "EXPENSE" | "INCOME" | "BOTH" }
+export interface Category { id: string; name: string; type: "EXPENSE" | "INCOME" | "BOTH"; color: string | null }
 export interface FixedExpense {
   id: string; name: string; amount: string; dueDay: number; category: string; active: boolean;
   bankAccountId: string | null; creditCardId: string | null; paidThisMonth: boolean;
@@ -47,12 +47,16 @@ export interface Plan { id: string; name: string; type: "SAVINGS" | "WANTS"; mon
 export interface Tx {
   id: string; type: "INCOME" | "EXPENSE" | "CARD_PAYMENT" | "LOAN_PAYMENT"; amount: string; date: string;
   category: string; description: string; isHistorical: boolean;
+  bankAccountId: string | null; creditCardId: string | null;
+  /** Color de su categoría (lo añade el GET de movimientos). */
+  color: string;
 }
 export interface Summary {
   month: number; year: number;
   bankBalances: Record<string, string>; bankTotal: string; cardsDue: string; loansDue: string; fixedDue: string;
   savingsBudget: string; wantsBudget: string; income: string; expenses: string; commitments: string;
   freeMoney: string; projection: { amount: string; status: "SURPLUS" | "DEFICIT" };
+  expensesByCategory: { category: string; total: string; percentage: string }[];
   cards: {
     id: string; bankName: string; cardName: string; creditLimit: string; used: string; available: string;
     statementCutoff: string; paymentDueDate: string; billedThisMonth: string; dueThisMonth: string;

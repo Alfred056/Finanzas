@@ -2,6 +2,7 @@
 import { useState, type ReactNode } from "react";
 import { Plus } from "lucide-react";
 import { post } from "@/lib/api";
+import { ColorPicker } from "./CategoryColor";
 
 export function Panel({ title, icon, children, className = "" }: { title?: string; icon?: ReactNode; children: ReactNode; className?: string }) {
   return (
@@ -17,10 +18,10 @@ export function Panel({ title, icon, children, className = "" }: { title?: strin
   );
 }
 
-export function Bar({ pct, color = "bg-emerald-500" }: { pct: number; color?: string }) {
+export function Bar({ pct, color = "bg-emerald-500", fill }: { pct: number; color?: string; /** Color CSS libre; reemplaza a `color`. */ fill?: string }) {
   return (
     <div className="h-2 w-full overflow-hidden rounded-full bg-obsidian shadow-[inset_0_1px_2px_rgba(0,0,0,0.6)]">
-      <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
+      <div className={`h-full rounded-full ${fill ? "" : color}`} style={{ width: `${Math.min(100, Math.max(0, pct))}%`, background: fill }} />
     </div>
   );
 }
@@ -30,7 +31,7 @@ export const Empty = ({ children }: { children: ReactNode }) => <p className="te
 export interface FieldDef {
   name: string;
   label: string;
-  type?: "text" | "number" | "date" | "select";
+  type?: "text" | "number" | "date" | "select" | "color";
   options?: [string, string][];
   step?: string;
   initial?: string;
@@ -74,7 +75,7 @@ export function QuickForm({ title, endpoint, fields, onDone }: { title: string; 
     <form onSubmit={submit} className="w-full min-w-0 space-y-3">
       <h3 className="text-sm font-medium text-white">{title}</h3>
       <div className="grid grid-cols-2 gap-2">
-        {fields.map((f) => (
+        {fields.map((f) => f.type === "color" ? <ColorPicker key={f.name} name={f.name} label={f.label} /> : (
           <label key={f.name} className="min-w-0 space-y-1 text-xs text-zinc-400">
             {f.label}
             {f.type === "select" ? (

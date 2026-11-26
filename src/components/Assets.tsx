@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Check, CreditCard, HandCoins, Landmark, Repeat, Tags, Trash2 } from "lucide-react";
 import { api, money, useApi, type Account, type Card, type Category, type FixedExpense, type Loan } from "@/lib/api";
 import { Empty, Panel, QuickForm } from "./ui";
+import { CategoryBadge, categoryColor } from "./CategoryColor";
 import type { ViewProps } from "./AppShell";
 
 const row = "flex items-center justify-between gap-3 border-b border-zinc-800 py-2 text-sm last:border-0 [&>span:first-child]:min-w-0 [&>span:first-child]:break-words";
@@ -55,16 +56,17 @@ function FixedExpenses({ month, year, version, refresh }: ViewProps) {
 }
 
 function Categories({ version, refresh }: ViewProps) {
-  const cats = useApi<Category[]>("/api/categories", version).data;
+  const { data: cats, error } = useApi<Category[]>("/api/categories", version);
   const label = { EXPENSE: "Gasto", INCOME: "Ingreso", BOTH: "Ambos" };
   return (
     <Panel title="Categorías" icon={<Tags size={15} />} className="lg:col-span-3">
       <div className="mb-4 flex flex-wrap gap-2">
+        {error && <p className="text-xs text-red-400">No se pudieron cargar las categorías: {error}</p>}
         {cats?.length === 0 && <Empty>Sin categorías.</Empty>}
         {cats?.map((c) => (
-          <span key={c.id} className="badge !rounded-full border border-zinc-700 !px-2.5 py-1 text-xs">
-            {c.name} <span className="text-zinc-500">· {label[c.type]}</span>
-          </span>
+          <CategoryBadge key={c.id} name={c.name} color={categoryColor(cats ?? [], c.name)}>
+            <span className="shrink-0 text-zinc-400">· {label[c.type]}</span>
+          </CategoryBadge>
         ))}
       </div>
       <QuickForm
@@ -72,6 +74,7 @@ function Categories({ version, refresh }: ViewProps) {
         fields={[
           { name: "name", label: "Nombre" },
           { name: "type", label: "Tipo", type: "select", initial: "BOTH", options: [["BOTH", "Ambos"], ["EXPENSE", "Gasto"], ["INCOME", "Ingreso"]] },
+          { name: "color", label: "Color", type: "color" },
         ]}
       />
     </Panel>
